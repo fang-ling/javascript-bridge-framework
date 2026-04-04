@@ -62,14 +62,6 @@ func JavaScriptBridge_LinkElements(
   parentIDStringCount: UnsignedInteger64
 )
 
-@_extern(wasm, module: "env", name: "JavaScriptBridge_LinkElementsIfNeeded")
-func JavaScriptBridge_LinkElementsIfNeeded(
-  elementIDString: UnsafePointer<Integer32>,
-  elementIDStringCount: UnsignedInteger64,
-  parentIDString: UnsafePointer<Integer32>,
-  parentIDStringCount: UnsignedInteger64
-)
-
 @available(macOS 13.3.0, *)
 public enum JavaScriptBridge {
   public static func initializeElement(
@@ -129,18 +121,6 @@ public enum JavaScriptBridge {
     let parentIDString = parentID?.uuidString ?? String("")
 
     JavaScriptBridge_LinkElements(
-      elementIDString: elementIDString.charactersView,
-      elementIDStringCount: elementIDString.count,
-      parentIDString: parentIDString.charactersView,
-      parentIDStringCount: parentIDString.count
-    )
-  }
-
-  public static func linkElementsIfNeeded(elementID: UUID, parentID: UUID?) {
-    let elementIDString = elementID.uuidString
-    let parentIDString = parentID?.uuidString ?? String("")
-
-    JavaScriptBridge_LinkElementsIfNeeded(
       elementIDString: elementIDString.charactersView,
       elementIDStringCount: elementIDString.count,
       parentIDString: parentIDString.charactersView,

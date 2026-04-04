@@ -116,23 +116,6 @@ export function JavaScriptBridge_LinkElements(
   parentElement.appendChild(element)
 }
 
-export function JavaScriptBridge_LinkElementsIfNeeded(
-  elementIDString,
-  elementIDStringCount,
-  parentIDString,
-  parentIDStringCount
-) {
-  const elementID = readString(elementIDString, elementIDStringCount)
-  const parentID = readString(parentIDString, parentIDStringCount)
-
-  const element = getElement(elementID)
-  const parentElement = getElement(parentID)
-
-  if (element.parentElement !== parentElement) {
-    parentElement.appendChild(element)
-  }
-}
-
 //export class UIFramework_JavaScriptBridge {
 //  static updateElementText(id, text, textCount) {
 //    this.getElement(id).textContent = this.readString(text, textCount)
