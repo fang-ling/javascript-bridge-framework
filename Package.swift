@@ -21,6 +21,10 @@
 
 import PackageDescription
 
+let dependencies = [
+  ("https://github.com/fang-ling/foundation-framework", "snapshot")
+]
+
 let package = Package(
   name: "JavaScriptBridgeFramework",
   products: [
@@ -29,7 +33,16 @@ let package = Package(
       targets: ["JavaScriptBridgeFramework"]
     )
   ],
+  dependencies: dependencies.map({ .package(url: $0.0, branch: $0.1) }),
   targets: [
-    .target(name: "JavaScriptBridgeFramework")
+    .target(
+      name: "JavaScriptBridgeFramework",
+      dependencies: [
+        .product(name: "FoundationFramework", package: "foundation-framework")
+      ],
+      swiftSettings: [
+        .enableExperimentalFeature("Extern")
+      ]
+    )
   ]
 )
