@@ -56,6 +56,7 @@ export function JavaScriptBridge_InitializeElement(
       case 1: return "div"
       case 2: return "span"
       case 3: return "button"
+      case 4: return "p"
     }
   })()
 
@@ -116,10 +117,18 @@ export function JavaScriptBridge_LinkElements(
   parentElement.appendChild(element)
 }
 
+export function JavaScriptBridge_UpdateElementTextContent(
+  elementIDString,
+  elementIDStringCount,
+  textString,
+  textStringCount
+) {
+  const elementID = readString(elementIDString, elementIDStringCount)
+
+  getElement(elementID).textContent = readString(textString, textStringCount)
+}
+
 //export class UIFramework_JavaScriptBridge {
-//  static updateElementText(id, text, textCount) {
-//    this.getElement(id).textContent = this.readString(text, textCount)
-//  }
 //  static addEventListener(htmlEventType, id) {
 //    const eventType = (() => {
 //      switch (htmlEventType) {

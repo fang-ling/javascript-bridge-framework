@@ -20,7 +20,7 @@
 import FoundationFramework
 
 @_extern(wasm, module: "env", name: "JavaScriptBridge_InitializeElement")
-public func JavaScriptBridge_InitializeElement(
+func JavaScriptBridge_InitializeElement(
   elementIDString: UnsafePointer<Integer32>,
   elementIDStringCount: UnsignedInteger64,
   elementType: UnsignedInteger32
@@ -60,6 +60,14 @@ func JavaScriptBridge_LinkElements(
   elementIDStringCount: UnsignedInteger64,
   parentIDString: UnsafePointer<Integer32>,
   parentIDStringCount: UnsignedInteger64
+)
+
+@_extern(wasm, module: "env", name: "JavaScriptBridge_UpdateElementTextContent")
+func JavaScriptBridge_UpdateElementTextContent(
+  elementIDString: UnsafePointer<Integer32>,
+  elementIDStringCount: UnsignedInteger64,
+  textString: UnsafePointer<Integer32>,
+  textStringCount: UnsignedInteger64
 )
 
 @available(macOS 13.3.0, *)
@@ -127,6 +135,17 @@ public enum JavaScriptBridge {
       parentIDStringCount: parentIDString.count
     )
   }
+
+  public static func updateElementTextContent(elementID: UUID, text: String) {
+    let elementIDString = elementID.uuidString
+
+    JavaScriptBridge_UpdateElementTextContent(
+      elementIDString: elementIDString.charactersView,
+      elementIDStringCount: elementIDString.count,
+      textString: text.charactersView,
+      textStringCount: text.count
+    )
+  }
 }
 
 @available(macOS 13.3.0, *)
@@ -135,5 +154,6 @@ extension JavaScriptBridge {
     case division = 1
     case span = 2
     case button = 3
+    case paragraph = 4
   }
 }
