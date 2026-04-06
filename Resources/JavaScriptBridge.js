@@ -20,7 +20,7 @@
 let _instance
 let _memory
 let elements
-// let eventListeners
+let eventListeners
 
 function readString(string, count) {
   const characters = new Uint32Array(
@@ -43,7 +43,7 @@ export function JavaScriptBridge_Initialize(instance, memory) {
   _instance = instance
   _memory = memory
   elements = new Map()
-//    this.eventListeners = new Map()
+  eventListeners = new Map()
 }
 
 export function JavaScriptBridge_InitializeElement(
@@ -72,6 +72,31 @@ export function JavaScriptBridge_GetWindowWidth() {
 
 export function JavaScriptBridge_GetWindowHeight() {
   return window.innerHeight
+}
+
+export function JavaScriptBridge_MeasureTextSize(
+  textString,
+  textStringCount,
+  styleTextString,
+  styleTextStringCount,
+  result
+) {
+  const element = document.createElement("div")
+  element.textContent = readString(textString, textStringCount)
+  element.style.cssText = "position:absolute; " +
+                          "visibility:hidden; " +
+                          "pointer-events:none; " +
+                          "white-space: pre; " +
+                          readString(styleTextString, styleTextStringCount)
+  document.body.appendChild(element)
+
+  const { width, height } = element.getBoundingClientRect()
+
+  const memoryView = new Float64Array(_memory.buffer)
+  memoryView[result / 8] = width
+  memoryView[result / 8 + 1] = height
+
+  element.remove()
 }
 
 export function JavaScriptBridge_SetElementStyleProperty(
@@ -128,26 +153,32 @@ export function JavaScriptBridge_UpdateElementTextContent(
   getElement(elementID).textContent = readString(textString, textStringCount)
 }
 
-//export class UIFramework_JavaScriptBridge {
-//  static addEventListener(htmlEventType, id) {
-//    const eventType = (() => {
-//      switch (htmlEventType) {
-//        case 1: return "click" // touchUpInside
-//      }
-//    })()
-//
-//    const eventHandler = () => {
-//      this.instance.exports.UIJavaScriptBridge_HTMLElement_DispatchEvent(
-//        id,
-//        htmlEventType
-//      )
-//    }
-//
-//    if (!this.eventListeners.has(id)) {
-//      this.eventListeners.set(id, new Map())
-//    }
-//    this.eventListeners.get(id).set(htmlEventType, eventHandler)
-//
-//    this.elements.get(id)?.addEventListener(eventType, eventHandler)
-//  }
-//}
+export function JavaScriptBridge_AddElementEventListener(
+  elementIDString,
+  elementIDStringCount,
+  eventType
+) {
+  const elementID = readString(elementIDString, elementIDStringCount)
+  const eventTypeString = (() => {
+    switch (eventType) {
+      case 1: return "click" // touchUpInside
+    }
+  })()
+
+  const eventHandler = () => {
+    const characters = [...elementID].map((c) => c.codePointAt(0))
+    const buffer = _instance.exports.JavaScriptBridge_Allocate(144)
+    new Uint32Array(_memory.buffer, buffer, 36).set(characters)
+
+    _instance.exports.UIFramework_DispatchElementEvent(buffer, 36n, eventType)
+
+    _instance.exports.JavaScriptBridge_Deallocate(buffer)
+  }
+
+  if (!eventListeners.has(elementID)) {
+    eventListeners.set(elementID, new Map())
+  }
+  eventListeners.get(elementID).set(eventType, eventHandler)
+
+  getElement(elementID)?.addEventListener(eventTypeString, eventHandler)
+}

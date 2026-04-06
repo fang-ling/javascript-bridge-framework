@@ -17,7 +17,27 @@
 //  limitations under the License.
 //
 
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(WASILibc)
+import WASILibc
+#endif
+
 import FoundationFramework
+
+@_expose(wasm, "JavaScriptBridge_Allocate")
+@_cdecl("JavaScriptBridge_Allocate")
+@available(macOS 13.3.0, *)
+func JavaScriptBridge_Allocate(size: Integer32) -> UnsafeMutableRawPointer {
+  return malloc(Int(size))
+}
+
+@_expose(wasm, "JavaScriptBridge_Deallocate")
+@_cdecl("JavaScriptBridge_Deallocate")
+@available(macOS 13.3.0, *)
+func JavaScriptBridge_Deallocate(pointer: UnsafeMutableRawPointer) {
+  free(pointer)
+}
 
 @_extern(wasm, module: "env", name: "JavaScriptBridge_InitializeElement")
 func JavaScriptBridge_InitializeElement(
@@ -31,6 +51,15 @@ func JavaScriptBridge_GetWindowWidth() -> FloatingPoint64
 
 @_extern(wasm, module: "env", name: "JavaScriptBridge_GetWindowHeight")
 func JavaScriptBridge_GetWindowHeight() -> FloatingPoint64
+
+@_extern(wasm, module: "env", name: "JavaScriptBridge_MeasureTextSize")
+func JavaScriptBridge_MeasureTextSize(
+  textString: UnsafePointer<Integer32>,
+  textStringCount: UnsignedInteger64,
+  styleTextString: UnsafePointer<Integer32>,
+  styleTextStringCount: UnsignedInteger64,
+  result: UnsafeMutablePointer<FloatingPoint64>
+)
 
 @_extern(wasm, module: "env", name: "JavaScriptBridge_SetElementStyleProperty")
 func JavaScriptBridge_SetElementStyleProperty(
@@ -70,6 +99,13 @@ func JavaScriptBridge_UpdateElementTextContent(
   textStringCount: UnsignedInteger64
 )
 
+@_extern(wasm, module: "env", name: "JavaScriptBridge_AddElementEventListener")
+func JavaScriptBridge_AddElementEventListener(
+  elementIDString: UnsafePointer<Integer32>,
+  elementIDStringCount: UnsignedInteger64,
+  eventType: UnsignedInteger32
+)
+
 @available(macOS 13.3.0, *)
 public enum JavaScriptBridge {
   public static func initializeElement(
@@ -91,6 +127,24 @@ public enum JavaScriptBridge {
 
   public static func getWindowHeight() -> FloatingPoint64 {
     JavaScriptBridge_GetWindowHeight()
+  }
+
+  public static func measureTextSize(
+    text: String,
+    styleText: String
+  ) -> Size {
+    let result = UnsafeMutablePointer<FloatingPoint64>.allocate(capacity: 2)
+    defer { result.deallocate() }
+
+    JavaScriptBridge_MeasureTextSize(
+      textString: text.charactersView,
+      textStringCount: text.count,
+      styleTextString: styleText.charactersView,
+      styleTextStringCount: styleText.count,
+      result: result
+    )
+
+    return .init(width: result[0], height: result[1])
   }
 
   public static func setElementStyleProperty(
@@ -144,6 +198,19 @@ public enum JavaScriptBridge {
       elementIDStringCount: elementIDString.count,
       textString: text.charactersView,
       textStringCount: text.count
+    )
+  }
+
+  public static func addElementEventListener(
+    elementID: UUID,
+    eventTypeRawValue: UnsignedInteger32
+  ) {
+    let elementIDString = elementID.uuidString
+
+    JavaScriptBridge_AddElementEventListener(
+      elementIDString: elementIDString.charactersView,
+      elementIDStringCount: elementIDString.count,
+      eventType: eventTypeRawValue
     )
   }
 }
