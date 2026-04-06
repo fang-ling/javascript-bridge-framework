@@ -17,7 +17,27 @@
 //  limitations under the License.
 //
 
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(WASILibc)
+import WASILibc
+#endif
+
 import FoundationFramework
+
+@_expose(wasm, "JavaScriptBridge_Allocate")
+@_cdecl("JavaScriptBridge_Allocate")
+@available(macOS 13.3.0, *)
+func JavaScriptBridge_Allocate(size: Integer32) -> UnsafeMutableRawPointer {
+  return malloc(Int(size))
+}
+
+@_expose(wasm, "JavaScriptBridge_Deallocate")
+@_cdecl("JavaScriptBridge_Deallocate")
+@available(macOS 13.3.0, *)
+func JavaScriptBridge_Deallocate(pointer: UnsafeMutableRawPointer) {
+  free(pointer)
+}
 
 @_extern(wasm, module: "env", name: "JavaScriptBridge_InitializeElement")
 func JavaScriptBridge_InitializeElement(
@@ -144,6 +164,19 @@ public enum JavaScriptBridge {
       elementIDStringCount: elementIDString.count,
       textString: text.charactersView,
       textStringCount: text.count
+    )
+  }
+
+  public static func addElementEventListener(
+    elementID: UUID,
+    eventTypeRawValue: UnsignedInteger32
+  ) {
+    let elementIDString = elementID.uuidString
+
+    JavaScriptBridge_AddElementEventListener(
+      elementIDString: elementIDString.charactersView,
+      elementIDStringCount: elementIDString.count,
+      eventType: eventTypeRawValue
     )
   }
 }
