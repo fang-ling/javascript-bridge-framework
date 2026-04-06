@@ -74,6 +74,31 @@ export function JavaScriptBridge_GetWindowHeight() {
   return window.innerHeight
 }
 
+export function JavaScriptBridge_MeasureTextSize(
+  textString,
+  textStringCount,
+  styleTextString,
+  styleTextStringCount,
+  result
+) {
+  const element = document.createElement("div")
+  element.textContent = readString(textString, textStringCount)
+  element.style.cssText = "position:absolute; " +
+                          "visibility:hidden; " +
+                          "pointer-events:none; " +
+                          "white-space: pre; " +
+                          readString(styleTextString, styleTextStringCount)
+  document.body.appendChild(element)
+
+  const { width, height } = element.getBoundingClientRect()
+
+  const memoryView = new Float64Array(_memory.buffer)
+  memoryView[result / 8] = width
+  memoryView[result / 8 + 1] = height
+
+  element.remove()
+}
+
 export function JavaScriptBridge_SetElementStyleProperty(
   elementIDString,
   elementIDStringCount,
